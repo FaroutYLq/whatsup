@@ -99,11 +99,7 @@ def main(config_path: str = "config.yaml"):
         f"(score >= {evaluator.threshold})"
     )
     
-    if not relevant_papers:
-        print("\nNo relevant papers found. Exiting.")
-        return 0
-    
-    # Step 5: Send email digest
+    # Step 5: Send email digest (even if no papers found)
     print("\nSending email digest...")
     email_config = config.get_email_config()
     

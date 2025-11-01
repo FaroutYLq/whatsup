@@ -49,10 +49,6 @@ class EmailSender:
         Returns:
             True if successful, False otherwise
         """
-        if not papers:
-            print("No relevant papers to send.")
-            return False
-        
         subject = self._create_subject(papers)
         body = self._create_body(papers)
         
@@ -66,6 +62,9 @@ class EmailSender:
         date_str = datetime.now().strftime('%Y-%m-%d')
         count = len(papers)
         
+        if count == 0:
+            return f"ArXiv Digest: No matches - {date_str}"
+        
         return (
             f"ArXiv Digest: {count} relevant "
             f"paper{'s' if count != 1 else ''} - {date_str}"
@@ -76,6 +75,30 @@ class EmailSender:
         papers: List[Dict[str, Any]]
     ) -> str:
         """Create email body with paper details."""
+        if not papers:
+            return "\n".join([
+                "ArXiv Daily Digest",
+                "",
+                "=" * 70,
+                "",
+                "No papers matched your interests today.",
+                "",
+                "This means no papers from your selected arXiv",
+                "categories scored above your relevance threshold.",
+                "",
+                "Suggestions:",
+                "- Lower your threshold in config.yaml",
+                "- Add more arXiv categories",
+                "- Broaden your keyword filters",
+                "- Update your research interests description",
+                "",
+                "=" * 70,
+                "",
+                "---",
+                "This digest was generated automatically.",
+                "Powered by ArXiv Daily Digest"
+            ])
+        
         lines = [
             "Here are today's relevant papers from arXiv:",
             "",
