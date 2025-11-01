@@ -3,7 +3,7 @@ ArXiv client for fetching and filtering papers
 """
 
 import arxiv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 
 
@@ -42,7 +42,7 @@ class ArxivClient:
             List of paper dictionaries
         """
         all_papers = []
-        cutoff_date = datetime.now() - timedelta(
+        cutoff_date = datetime.now(timezone.utc) - timedelta(
             days=self.max_days_back
         )
         
@@ -58,31 +58,44 @@ class ArxivClient:
                 sort_order=arxiv.SortOrder.Descending
             )
             
-            for result in search.results():
-                # Check if paper is recent enough
-                if result.published < cutoff_date:
-                    continue
-                
-                paper = {
-                    'title': result.title,
-                    'abstract': result.summary,
-                    'authors': ', '.join(
-                        [a.name for a in result.authors]
-                    ),
-                    'published': result.published.strftime(
-                        '%Y-%m-%d'
-                    ),
-                    'url': result.entry_id,
-                    'categories': result.categories,
-                    'pdf_url': result.pdf_url
-                }
-                
-                # Apply keyword pre-filtering if keywords exist
-                if self.keywords:
-                    if self._matches_keywords(paper):
+            try:
+                for result in search.results():
+                    # Check if paper is recent enough
+                    if result.published < cutoff_date:
+                        continue
+                    
+                    paper = {
+                        'title': result.title,
+                        'abstract': result.summary,
+                        'authors': ', '.join(
+                            [a.name for a in result.authors]
+                        ),
+                        'published': result.published.strftime(
+                            '%Y-%m-%d'
+                        ),
+                        'url': result.entry_id,
+                        'categories': result.categories,
+                        'pdf_url': result.pdf_url
+                    }
+                    
+                    # Apply keyword pre-filtering if keywords exist
+                    if self.keywords:
+                        if self._matches_keywords(paper):
+                            all_papers.append(paper)
+                    else:
                         all_papers.append(paper)
-                else:
-                    all_papers.append(paper)
+            except arxiv.UnexpectedEmptyPageError:
+                # ArXiv API returned empty page, no more results
+                print(
+                    f"  Note: ArXiv API returned empty page "
+                    f"for {category}, continuing..."
+                )
+                continue
+            except Exception as e:
+                print(
+                    f"  Warning: Error fetching {category}: {e}"
+                )
+                continue
         
         # Remove duplicates (papers in multiple categories)
         unique_papers = self._deduplicate_papers(all_papers)
