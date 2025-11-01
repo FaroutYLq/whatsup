@@ -48,7 +48,7 @@ openai:
   api_key: your-openai-api-key-here
   
   # Model to use for evaluation
-  model: gpt-5
+  model: gpt-4o
   
   # Relevance threshold (0-10)
   # Papers scoring >= this value will be included
@@ -58,6 +58,9 @@ openai:
   # Higher = faster but more API load
   # Recommended: 10 for good balance
   max_workers: 10
+  
+  # Show sample LLM responses for debugging (true/false)
+  verbose: false
 
 # Zotero Library Configuration
 zotero:

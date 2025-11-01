@@ -17,7 +17,8 @@ class LLMEvaluator:
         api_key: str,
         model: str = "gpt-4o-mini",
         threshold: float = 7.0,
-        max_workers: int = 10
+        max_workers: int = 10,
+        verbose: bool = False
     ):
         """
         Initialize the LLM evaluator.
@@ -27,11 +28,14 @@ class LLMEvaluator:
             model: Model to use (e.g., gpt-4o-mini)
             threshold: Minimum score for relevance (0-10)
             max_workers: Max parallel API calls
+            verbose: Show sample LLM responses
         """
         self.client = OpenAI(api_key=api_key)
         self.model = model
         self.threshold = threshold
         self.max_workers = max_workers
+        self.verbose = verbose
+        self.sample_count = 0
     
     def evaluate_papers(
         self,
@@ -150,7 +154,22 @@ class LLMEvaluator:
                 )
                 
                 content = response.choices[0].message.content
-                score, reason = self._parse_response(content)
+                score, reason = self._parse_response(
+                    content, paper['title']
+                )
+                
+                # Show first 3 responses if verbose
+                if self.verbose and self.sample_count < 3:
+                    self.sample_count += 1
+                    print(
+                        f"\n{'='*60}\n"
+                        f"Sample Response {self.sample_count}:\n"
+                        f"Paper: {paper['title'][:50]}...\n"
+                        f"LLM Response:\n{content}\n"
+                        f"Parsed Score: {score}\n"
+                        f"Parsed Reason: {reason}\n"
+                        f"{'='*60}\n"
+                    )
                 
                 return {'score': score, 'reason': reason}
                 
@@ -216,36 +235,80 @@ REASON: [One sentence explanation]"""
         
         return prompt
     
-    def _parse_response(self, content: str) -> tuple:
+    def _parse_response(
+        self, 
+        content: str, 
+        paper_title: str = ""
+    ) -> tuple:
         """
         Parse LLM response to extract score and reason.
         
         Args:
             content: LLM response text
+            paper_title: Paper title for debug logging
             
         Returns:
             Tuple of (score, reason)
         """
+        import re
+        
         score = 0.0
         reason = "No reason provided"
         
-        lines = content.strip().split('\n')
+        # Try multiple parsing strategies
         
-        for line in lines:
-            if line.startswith('SCORE:'):
-                try:
-                    score_text = line.replace(
-                        'SCORE:', ''
-                    ).strip()
-                    # Extract first number found
-                    import re
-                    match = re.search(r'\d+\.?\d*', score_text)
-                    if match:
-                        score = float(match.group())
-                except (ValueError, AttributeError):
-                    score = 0.0
-            elif line.startswith('REASON:'):
-                reason = line.replace('REASON:', '').strip()
+        # Strategy 1: Look for "SCORE:" pattern
+        score_match = re.search(
+            r'SCORE:\s*(\d+\.?\d*)', 
+            content, 
+            re.IGNORECASE
+        )
+        if score_match:
+            score = float(score_match.group(1))
+        else:
+            # Strategy 2: Look for any score pattern
+            # like "Score: 8" or "rating: 7/10"
+            alt_match = re.search(
+                r'(?:score|rating)[\s:]+(\d+\.?\d*)',
+                content,
+                re.IGNORECASE
+            )
+            if alt_match:
+                score = float(alt_match.group(1))
+            else:
+                # Strategy 3: Just find first number 0-10
+                num_match = re.search(
+                    r'\b([0-9]|10)(?:\.\d+)?\b', 
+                    content
+                )
+                if num_match:
+                    potential_score = float(num_match.group(1))
+                    if 0 <= potential_score <= 10:
+                        score = potential_score
+        
+        # Extract reason
+        reason_match = re.search(
+            r'REASON:\s*(.+?)(?:\n|$)', 
+            content, 
+            re.IGNORECASE | re.DOTALL
+        )
+        if reason_match:
+            reason = reason_match.group(1).strip()
+        else:
+            # Fallback: use first sentence
+            sentences = re.split(r'[.!?]\s+', content)
+            if len(sentences) > 1:
+                reason = sentences[1][:100]
+            else:
+                reason = content[:100]
+        
+        # Debug: Log first few responses
+        if score == 0.0:
+            print(
+                f"\n[DEBUG] Failed to parse score for: "
+                f"{paper_title}..."
+            )
+            print(f"[DEBUG] LLM response: {content}")
         
         return score, reason
 

@@ -92,7 +92,8 @@ def main(config_path: str = "config.yaml"):
         api_key=openai_config['api_key'],
         model=openai_config.get('model', 'gpt-4o-mini'),
         threshold=openai_config.get('threshold', 7.0),
-        max_workers=openai_config.get('max_workers', 10)
+        max_workers=openai_config.get('max_workers', 10),
+        verbose=openai_config.get('verbose', False)
     )
     
     user_interests = interests_config.get(
