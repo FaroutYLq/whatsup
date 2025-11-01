@@ -6,6 +6,7 @@ from openai import OpenAI
 from typing import Dict, Any, List
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 
 class LLMEvaluator:
@@ -122,38 +123,67 @@ class LLMEvaluator:
             paper, research_context, user_interests
         )
         
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are an academic research "
-                            "assistant. Evaluate the relevance "
-                            "of papers to the user's research "
-                            "interests."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                max_completion_tokens=200
-            )
-            
-            content = response.choices[0].message.content
-            score, reason = self._parse_response(content)
-            
-            return {'score': score, 'reason': reason}
-            
-        except Exception as e:
-            print(
-                f"Error evaluating paper "
-                f"'{paper['title'][:50]}...': {e}"
-            )
-            return {'score': 0.0, 'reason': 'Evaluation error'}
+        # Retry logic for rate limits
+        max_retries = 5
+        base_delay = 1.0
+        
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are an academic research "
+                                "assistant. Evaluate the "
+                                "relevance of papers to the "
+                                "user's research interests."
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    max_completion_tokens=200
+                )
+                
+                content = response.choices[0].message.content
+                score, reason = self._parse_response(content)
+                
+                return {'score': score, 'reason': reason}
+                
+            except Exception as e:
+                error_str = str(e)
+                
+                # Handle rate limit errors
+                if "rate_limit" in error_str.lower() or "429" in error_str:
+                    if attempt < max_retries - 1:
+                        # Exponential backoff
+                        delay = base_delay * (2 ** attempt)
+                        # Add jitter
+                        import random
+                        delay += random.uniform(0, 1)
+                        time.sleep(delay)
+                        continue
+                    else:
+                        return {
+                            'score': 0.0,
+                            'reason': 'Rate limit exceeded'
+                        }
+                
+                # Other errors
+                print(
+                    f"Error evaluating paper "
+                    f"'{paper['title'][:50]}...': {e}"
+                )
+                return {
+                    'score': 0.0, 
+                    'reason': 'Evaluation error'
+                }
+        
+        return {'score': 0.0, 'reason': 'Max retries exceeded'}
     
     def _build_prompt(
         self,

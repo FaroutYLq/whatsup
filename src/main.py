@@ -39,11 +39,23 @@ def main(config_path: str = "config.yaml"):
     
     if library_file and Path(library_file).exists():
         zotero = ZoteroParser(library_file)
-        research_context = zotero.get_summary()
+        include_all = zotero_config.get(
+            'include_all_titles', True
+        )
+        detailed = zotero_config.get('detailed_papers', 30)
+        research_context = zotero.get_summary(
+            include_all_titles=include_all,
+            detailed_papers=detailed
+        )
         print(
             f"  Found {len(zotero.get_papers())} papers "
             "in library"
         )
+        if include_all:
+            print(
+                f"  Using all {len(zotero.get_papers())} "
+                f"titles ({detailed} with abstracts)"
+            )
     else:
         print(
             "  No Zotero library found, "

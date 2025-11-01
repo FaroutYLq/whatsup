@@ -65,6 +65,13 @@ zotero:
   # Supported formats: .bib (BibTeX) or .json
   # See docs/ZOTERO_EXPORT.md for export instructions
   library_file: path/to/your/zotero_export.bib
+  
+  # Include all paper titles from library (recommended)
+  include_all_titles: true
+  
+  # Number of recent papers to include with full abstracts
+  # (remaining papers show titles only for context)
+  detailed_papers: 200
 
 # Your Research Interests
 interests:

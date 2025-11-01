@@ -97,12 +97,17 @@ class ZoteroParser:
         """Get the list of parsed papers."""
         return self.papers
     
-    def get_summary(self, max_papers: int = 20) -> str:
+    def get_summary(
+        self, 
+        include_all_titles: bool = True,
+        detailed_papers: int = 30
+    ) -> str:
         """
         Get a text summary of the library for LLM.
         
         Args:
-            max_papers: Maximum papers to include
+            include_all_titles: Include all paper titles
+            detailed_papers: Number of papers with abstracts
             
         Returns:
             Formatted summary string
@@ -111,31 +116,50 @@ class ZoteroParser:
             return "No Zotero library provided."
         
         summary_lines = [
-            "Research Background (from Zotero library):",
+            f"Research Background from Zotero library "
+            f"({len(self.papers)} papers):",
             ""
         ]
         
-        # Include up to max_papers most recent papers
-        papers_to_include = self.papers[:max_papers]
-        
-        for i, paper in enumerate(papers_to_include, 1):
-            title = paper.get('title', 'No title')
-            abstract = paper.get('abstract', '')
+        # Section 1: Recent papers with abstracts
+        if detailed_papers > 0:
+            summary_lines.extend([
+                f"Recent papers with details "
+                f"(most recent {detailed_papers}):",
+                ""
+            ])
             
-            # Truncate long abstracts
-            if len(abstract) > 300:
-                abstract = abstract[:300] + "..."
+            papers_with_abstracts = self.papers[:detailed_papers]
             
-            summary_lines.append(f"{i}. {title}")
-            if abstract:
-                summary_lines.append(f"   Abstract: {abstract}")
-            summary_lines.append("")
+            for i, paper in enumerate(papers_with_abstracts, 1):
+                title = paper.get('title', 'No title')
+                abstract = paper.get('abstract', '')
+                
+                # Truncate very long abstracts
+                if len(abstract) > 200:
+                    abstract = abstract[:200] + "..."
+                
+                summary_lines.append(f"{i}. {title}")
+                if abstract:
+                    summary_lines.append(
+                        f"   Abstract: {abstract}"
+                    )
+                summary_lines.append("")
         
-        if len(self.papers) > max_papers:
-            summary_lines.append(
-                f"... and {len(self.papers) - max_papers} "
-                "more papers"
-            )
+        # Section 2: All remaining titles (compact)
+        if include_all_titles and len(self.papers) > detailed_papers:
+            summary_lines.extend([
+                "",
+                f"Additional papers in library "
+                f"({len(self.papers) - detailed_papers} more):",
+                ""
+            ])
+            
+            remaining_papers = self.papers[detailed_papers:]
+            for paper in remaining_papers:
+                title = paper.get('title', 'No title')
+                # Just titles, very compact
+                summary_lines.append(f"- {title}")
         
         return "\n".join(summary_lines)
 
