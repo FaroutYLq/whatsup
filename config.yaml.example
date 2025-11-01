@@ -53,6 +53,11 @@ openai:
   # Relevance threshold (0-10)
   # Papers scoring >= this value will be included
   threshold: 7.0
+  
+  # Max parallel API calls (1-20)
+  # Higher = faster but more API load
+  # Recommended: 10 for good balance
+  max_workers: 10
 
 # Zotero Library Configuration
 zotero:

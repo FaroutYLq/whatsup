@@ -5,6 +5,7 @@ LLM-based paper relevance evaluator using OpenAI API
 from openai import OpenAI
 from typing import Dict, Any, List
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class LLMEvaluator:
@@ -14,7 +15,8 @@ class LLMEvaluator:
         self, 
         api_key: str,
         model: str = "gpt-4o-mini",
-        threshold: float = 7.0
+        threshold: float = 7.0,
+        max_workers: int = 10
     ):
         """
         Initialize the LLM evaluator.
@@ -23,10 +25,12 @@ class LLMEvaluator:
             api_key: OpenAI API key
             model: Model to use (e.g., gpt-4o-mini)
             threshold: Minimum score for relevance (0-10)
+            max_workers: Max parallel API calls
         """
         self.client = OpenAI(api_key=api_key)
         self.model = model
         self.threshold = threshold
+        self.max_workers = max_workers
     
     def evaluate_papers(
         self,
@@ -35,7 +39,7 @@ class LLMEvaluator:
         user_interests: str
     ) -> List[Dict[str, Any]]:
         """
-        Evaluate multiple papers for relevance.
+        Evaluate multiple papers for relevance in parallel.
         
         Args:
             papers: List of paper dictionaries
@@ -47,20 +51,47 @@ class LLMEvaluator:
         """
         relevant_papers = []
         
-        # Use tqdm for progress bar
-        for paper in tqdm(
-            papers, 
-            desc="Evaluating papers", 
-            unit="paper"
-        ):
-            result = self._evaluate_single_paper(
-                paper, research_context, user_interests
-            )
+        # Parallel evaluation with progress bar
+        with ThreadPoolExecutor(
+            max_workers=self.max_workers
+        ) as executor:
+            # Submit all evaluation tasks
+            future_to_paper = {
+                executor.submit(
+                    self._evaluate_single_paper,
+                    paper,
+                    research_context,
+                    user_interests
+                ): paper
+                for paper in papers
+            }
             
-            if result['score'] >= self.threshold:
-                paper['relevance_score'] = result['score']
-                paper['relevance_reason'] = result['reason']
-                relevant_papers.append(paper)
+            # Process completed tasks with progress bar
+            with tqdm(
+                total=len(papers),
+                desc="Evaluating papers",
+                unit="paper"
+            ) as pbar:
+                for future in as_completed(future_to_paper):
+                    paper = future_to_paper[future]
+                    try:
+                        result = future.result()
+                        
+                        if result['score'] >= self.threshold:
+                            paper['relevance_score'] = (
+                                result['score']
+                            )
+                            paper['relevance_reason'] = (
+                                result['reason']
+                            )
+                            relevant_papers.append(paper)
+                    except Exception as e:
+                        print(
+                            f"\nError processing paper "
+                            f"'{paper['title'][:50]}...': {e}"
+                        )
+                    finally:
+                        pbar.update(1)
         
         # Sort by relevance score (highest first)
         relevant_papers.sort(

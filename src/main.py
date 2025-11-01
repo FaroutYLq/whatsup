@@ -79,7 +79,8 @@ def main(config_path: str = "config.yaml"):
     evaluator = LLMEvaluator(
         api_key=openai_config['api_key'],
         model=openai_config.get('model', 'gpt-4o-mini'),
-        threshold=openai_config.get('threshold', 7.0)
+        threshold=openai_config.get('threshold', 7.0),
+        max_workers=openai_config.get('max_workers', 10)
     )
     
     user_interests = interests_config.get(
