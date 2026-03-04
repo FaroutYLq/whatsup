@@ -1,0 +1,93 @@
+name: ArXiv Digest Every 3 Days
+
+on:
+  schedule:
+    # Runs at 14:00 UTC every day; workflow gates to every 3 days.
+    # Note: GitHub cron is UTC.
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check 3-day cadence
+        id: cadence
+        if: github.event_name == 'schedule'
+        run: |
+          anchor_date="2026-03-04"
+          today_utc="$(date -u +%F)"
+          anchor_ts="$(date -u -d "$anchor_date" +%s)"
+          today_ts="$(date -u -d "$today_utc" +%s)"
+          days_since_anchor="$(( (today_ts - anchor_ts) / 86400 ))"
+          if [ "$((days_since_anchor % 3))" -eq 0 ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "3-day cadence matched for $today_utc."
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping $today_utc; not a 3-day boundary."
+          fi
+
+      - name: Set up Python
+        if: github.event_name == 'workflow_dispatch' || steps.cadence.outputs.should_run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: github.event_name == 'workflow_dispatch' || steps.cadence.outputs.should_run == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Write runtime config
+        if: github.event_name == 'workflow_dispatch' || steps.cadence.outputs.should_run == 'true'
+        env:
+          WHATSUP_CONFIG_YAML: ${{ secrets.WHATSUP_CONFIG_YAML }}
+        run: |
+          if [ -z "$WHATSUP_CONFIG_YAML" ]; then
+            echo "Missing required secret: WHATSUP_CONFIG_YAML"
+            exit 1
+          fi
+          printf '%s\n' "$WHATSUP_CONFIG_YAML" > config.yaml
+
+      - name: Write optional Zotero library
+        if: github.event_name == 'workflow_dispatch' || steps.cadence.outputs.should_run == 'true'
+        env:
+          WHATSUP_ZOTERO_BIB: ${{ secrets.WHATSUP_ZOTERO_BIB }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_01: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_01 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_02: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_02 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_03: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_03 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_04: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_04 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_05: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_05 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_06: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_06 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_07: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_07 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_08: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_08 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_09: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_09 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_10: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_10 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_11: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_11 }}
+          WHATSUP_ZOTERO_BIB_GZ_B64_12: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_12 }}
+        run: |
+          if [ -n "$WHATSUP_ZOTERO_BIB_GZ_B64_01" ]; then
+            : > /tmp/my_library.bib.gz.b64
+            for i in $(seq -w 1 12); do
+              var_name="WHATSUP_ZOTERO_BIB_GZ_B64_${i}"
+              part="${!var_name:-}"
+              if [ -n "$part" ]; then
+                printf '%s' "$part" >> /tmp/my_library.bib.gz.b64
+              fi
+            done
+            base64 --decode /tmp/my_library.bib.gz.b64 | gzip --decompress > my_library.bib
+            echo "Reconstructed my_library.bib from chunked secrets."
+          elif [ -n "$WHATSUP_ZOTERO_BIB" ]; then
+            printf '%s\n' "$WHATSUP_ZOTERO_BIB" > my_library.bib
+            echo "Wrote my_library.bib from single secret."
+          else
+            echo "WHATSUP_ZOTERO_BIB not set; running without Zotero file."
+          fi
+
+      - name: Run digest
+        if: github.event_name == 'workflow_dispatch' || steps.cadence.outputs.should_run == 'true'
+        run: python src/main.py config.yaml
