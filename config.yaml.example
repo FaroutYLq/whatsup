@@ -41,15 +41,17 @@ arxiv:
   # How many days back to search for papers
   max_days_back: 1
 
-# OpenAI API Configuration
-openai:
-  # Your OpenAI API key
-  # Get one at: https://platform.openai.com/api-keys
-  api_key: your-openai-api-key-here
-  
+# Anthropic (Claude) API Configuration
+anthropic:
+  # Your Anthropic API key (starts with sk-ant-...)
+  # Get one at: https://console.anthropic.com/settings/keys
+  api_key: your-anthropic-api-key-here
+
   # Model to use for evaluation
-  model: gpt-4o
-  
+  # claude-haiku-4-5 is fast + cheap (good for high-volume scoring);
+  # use claude-sonnet-5 or claude-opus-4-8 for higher-quality scoring.
+  model: claude-haiku-4-5
+
   # Relevance threshold (0-10)
   # Papers scoring >= this value will be included
   threshold: 7.0

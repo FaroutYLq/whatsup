@@ -8,7 +8,7 @@ from pathlib import Path
 from config_parser import ConfigParser
 from zotero_parser import ZoteroParser
 from arxiv_client import ArxivClient
-from llm_evaluator import LLMEvaluator
+from llm_evaluator import LLMEvaluator, FatalEvaluationError
 from email_sender import EmailSender
 
 
@@ -85,15 +85,15 @@ def main(config_path: str = "config.yaml"):
     
     # Step 4: Evaluate papers with LLM
     print("\nEvaluating papers for relevance...")
-    openai_config = config.get_openai_config()
+    anthropic_config = config.get_anthropic_config()
     interests_config = config.get_interests()
-    
+
     evaluator = LLMEvaluator(
-        api_key=openai_config['api_key'],
-        model=openai_config.get('model', 'gpt-4o-mini'),
-        threshold=openai_config.get('threshold', 7.0),
-        max_workers=openai_config.get('max_workers', 10),
-        verbose=openai_config.get('verbose', False)
+        api_key=anthropic_config['api_key'],
+        model=anthropic_config.get('model', 'claude-haiku-4-5'),
+        threshold=anthropic_config.get('threshold', 7.0),
+        max_workers=anthropic_config.get('max_workers', 10),
+        verbose=anthropic_config.get('verbose', False)
     )
     
     user_interests = interests_config.get(
@@ -101,11 +101,18 @@ def main(config_path: str = "config.yaml"):
         ''
     )
     
-    relevant_papers = evaluator.evaluate_papers(
-        papers=papers,
-        research_context=research_context,
-        user_interests=user_interests
-    )
+    try:
+        relevant_papers = evaluator.evaluate_papers(
+            papers=papers,
+            research_context=research_context,
+            user_interests=user_interests
+        )
+    except FatalEvaluationError as e:
+        print("\n" + "=" * 70)
+        print(f"FATAL: {e}")
+        print("Aborting without sending a digest.")
+        print("=" * 70)
+        return 1
     
     print(
         f"  Found {len(relevant_papers)} relevant papers "

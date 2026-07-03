@@ -54,7 +54,7 @@ if [ ! -f "config.yaml" ]; then
     echo ""
     echo "You need to configure:"
     echo "  1. Email SMTP settings (see docs/GMAIL_SETUP.md)"
-    echo "  2. OpenAI API key"
+    echo "  2. Anthropic (Claude) API key"
     echo "  3. ArXiv categories and keywords"
     echo "  4. Your research interests"
     echo "  5. Zotero library path (see docs/ZOTERO_EXPORT.md)"

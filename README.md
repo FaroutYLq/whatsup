@@ -2,7 +2,7 @@
 
 Get one email per day with arXiv papers that match your interests.
 
-This project pulls recent arXiv papers, optionally uses your Zotero library as context, scores papers with an OpenAI model, and sends only the relevant ones to your inbox.
+This project pulls recent arXiv papers, optionally uses your Zotero library as context, scores papers with a Claude (Anthropic) model, and sends only the relevant ones to your inbox.
 
 ## Core Use Case
 
@@ -32,7 +32,7 @@ cp config.yaml.example config.yaml
 ```
 
 3. Edit `config.yaml` with:
-- OpenAI API key
+- Anthropic (Claude) API key
 - SMTP email settings
 - arXiv categories
 - keywords
