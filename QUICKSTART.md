@@ -5,7 +5,7 @@ Get your ArXiv Daily Digest running in 5 minutes!
 ## Prerequisites
 
 - Python 3.7+
-- OpenAI API key
+- Anthropic (Claude) API key
 - Gmail account with app password
 
 ## 5-Minute Setup
@@ -26,10 +26,10 @@ cp config.yaml.example config.yaml
 
 ### 2. Get Your API Keys
 
-**OpenAI API Key:**
-1. Go to https://platform.openai.com/api-keys
-2. Create a new API key
-3. Copy it
+**Anthropic (Claude) API Key:**
+1. Go to https://console.anthropic.com/settings/keys
+2. Create a new API key (starts with `sk-ant-`)
+3. Copy it (you can only see it once)
 
 **Gmail App Password:**
 1. Go to https://myaccount.google.com/security
@@ -53,8 +53,8 @@ email:
   password: your-16-char-app-password
   to_email: your.email@gmail.com
 
-openai:
-  api_key: sk-your-openai-key-here
+anthropic:
+  api_key: sk-ant-your-anthropic-key-here
 
 arxiv:
   categories:
@@ -103,10 +103,10 @@ Add this line (update the path):
 - Check Gmail app password (no spaces)
 - Verify SMTP settings: `smtp.gmail.com:587`
 
-**"OpenAI API error"**
-- Check API key is correct
-- Verify you have credits: 
-  https://platform.openai.com/usage
+**"Anthropic API key rejected" / API error**
+- Check the API key is correct (starts with `sk-ant-`)
+- Verify you have credits:
+  https://console.anthropic.com/settings/billing
 
 **"Config file not found"**
 - Run from project directory
@@ -140,10 +140,10 @@ Adjust in `config.yaml`:
 
 ### Monitor Costs
 
-Check OpenAI usage: 
-https://platform.openai.com/usage
+Check Anthropic usage:
+https://console.anthropic.com/settings/usage
 
-Typical cost: **$1-2/month** with gpt-4o-mini
+Typical cost: **~$1-2/month** with claude-haiku-4-5
 
 ## Get Help
 

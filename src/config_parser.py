@@ -36,7 +36,7 @@ class ConfigParser:
     def _validate_config(self) -> None:
         """Validate the required configuration fields."""
         required_sections = [
-            'email', 'arxiv', 'openai', 'zotero', 'interests'
+            'email', 'arxiv', 'anthropic', 'zotero', 'interests'
         ]
         
         for section in required_sections:
@@ -62,10 +62,10 @@ class ConfigParser:
                 "Missing arxiv.categories"
             )
         
-        # Validate OpenAI section
-        if 'api_key' not in self.config['openai']:
+        # Validate Anthropic section
+        if 'api_key' not in self.config['anthropic']:
             raise ValueError(
-                "Missing openai.api_key"
+                "Missing anthropic.api_key"
             )
     
     def get_email_config(self) -> Dict[str, Any]:
@@ -76,9 +76,9 @@ class ConfigParser:
         """Get arxiv configuration."""
         return self.config['arxiv']
     
-    def get_openai_config(self) -> Dict[str, Any]:
-        """Get OpenAI configuration."""
-        return self.config['openai']
+    def get_anthropic_config(self) -> Dict[str, Any]:
+        """Get Anthropic configuration."""
+        return self.config['anthropic']
     
     def get_zotero_config(self) -> Dict[str, Any]:
         """Get Zotero configuration."""
