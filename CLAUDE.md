@@ -45,10 +45,10 @@ The pipeline is orchestrated by `src/main.py` and runs sequentially:
 
 ## CI/CD
 
-GitHub Actions workflow (`.github/workflows/digest-every-3-days.yml`):
-- Runs at 14:00 UTC daily but gates execution to every 3 days using a date-based cadence check.
+GitHub Actions workflow (`.github/workflows/digest-every-3-days.yml`, now runs weekly — filename kept for stable workflow identity):
+- Runs once a week (Mondays at 14:00 UTC via `cron: "0 14 * * 1"`).
 - A keepalive step (`gautamkrishnar/keepalive-workflow`) runs on schedule events to prevent GitHub from disabling the cron after 60 days of repo inactivity. Requires `contents: write` permission.
-- Because the run cadence is 3 days, set `arxiv.max_days_back` to 4–5 so consecutive fetch windows overlap and a delayed/skipped run doesn't permanently lose papers.
+- Set `arxiv.max_days_back` to 7 so each weekly run covers the full week since the previous one.
 - Config is injected from the `WHATSUP_CONFIG_YAML` secret.
 - Zotero library is stored as gzipped base64 chunks across multiple secrets (`WHATSUP_ZOTERO_BIB_GZ_B64_01` through `_12`).
 - Can be triggered manually via `workflow_dispatch`.

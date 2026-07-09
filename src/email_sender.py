@@ -2,12 +2,13 @@
 Email sender for delivering daily arxiv digest via SMTP
 """
 
+import re
 import smtplib
 import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 
 
 class EmailSender:
@@ -19,23 +20,39 @@ class EmailSender:
         smtp_port: int,
         from_email: str,
         password: str,
-        to_email: str
+        to_email: Union[str, List[str]]
     ):
         """
         Initialize the email sender.
-        
+
         Args:
             smtp_server: SMTP server address
             smtp_port: SMTP server port
             from_email: Sender email address
             password: Email password or app password
-            to_email: Recipient email address
+            to_email: Recipient(s) — either a single address, a
+                comma/semicolon-separated string, or a YAML list.
         """
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.from_email = from_email
         self.password = password
-        self.to_email = to_email
+        # Normalize to a list of recipients so the digest can go to
+        # multiple people. Accepts a list, or a delimited string.
+        self.recipients = self._normalize_recipients(to_email)
+        # Comma-joined form for the "To:" header.
+        self.to_email = ", ".join(self.recipients)
+
+    @staticmethod
+    def _normalize_recipients(
+        to_email: Union[str, List[str]]
+    ) -> List[str]:
+        """Turn a str / delimited-str / list into a clean address list."""
+        if isinstance(to_email, (list, tuple)):
+            candidates = to_email
+        else:
+            candidates = re.split(r'[,;]', str(to_email))
+        return [addr.strip() for addr in candidates if str(addr).strip()]
     
     def send_digest(
         self,
@@ -319,7 +336,13 @@ class EmailSender:
                 ) as server:
                     server.starttls()
                     server.login(self.from_email, self.password)
-                    server.send_message(msg)
+                    # Pass recipients explicitly so every address on the
+                    # list is delivered to, not just the header.
+                    server.send_message(
+                        msg,
+                        from_addr=self.from_email,
+                        to_addrs=self.recipients
+                    )
 
                 print(f"Email sent successfully to {self.to_email}")
                 return True

@@ -16,8 +16,13 @@ email:
   # For Gmail, use an app password (see docs/GMAIL_SETUP.md)
   password: your-app-password-here
   
-  # Recipient email address (can be same as from_email)
+  # Recipient(s). One address as a plain string, or several as a YAML
+  # list (or a comma-separated string). All listed addresses receive
+  # the same digest.
   to_email: your.email@gmail.com
+  # to_email:
+  #   - you@example.edu
+  #   - collaborator@example.edu
 
 # ArXiv Configuration
 arxiv:

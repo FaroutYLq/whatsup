@@ -208,6 +208,9 @@ __marimo__/
 
 # ArXiv Daily Digest - Project specific
 config.yaml
+# Any personal runtime config (contains API keys / SMTP passwords).
+*config.yaml
+!config.yaml.example
 digest.log
 *.log
 *.bib
