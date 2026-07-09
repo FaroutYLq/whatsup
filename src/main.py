@@ -70,18 +70,35 @@ def main(config_path: str = "config.yaml"):
     arxiv_client = ArxivClient(
         categories=arxiv_config['categories'],
         keywords=arxiv_config.get('keywords', []),
-        max_days_back=arxiv_config.get('max_days_back', 1)
+        max_days_back=arxiv_config.get('max_days_back', 1),
+        keyword_filter=arxiv_config.get('keyword_filter', False)
     )
-    
-    papers = arxiv_client.fetch_papers()
+
+    papers, failed_categories = arxiv_client.fetch_papers()
     print(
         f"  Found {len(papers)} papers "
         "(after filtering)"
     )
-    
+    if failed_categories:
+        print(
+            f"  Warning: {len(failed_categories)} category(ies) "
+            f"failed to fetch: {', '.join(failed_categories)}"
+        )
+        # If every category failed we have no coverage at all — abort
+        # loudly rather than emailing a misleading "no matches" digest.
+        if len(failed_categories) == len(arxiv_config['categories']):
+            print(
+                "\nAll categories failed to fetch. "
+                "Aborting without sending a digest."
+            )
+            return 1
+
     if not papers:
-        print("\nNo papers found. Exiting.")
-        return 0
+        # Still send a digest if fetching partially failed, so the
+        # coverage warning reaches the user instead of a silent no-op.
+        if not failed_categories:
+            print("\nNo papers found. Exiting.")
+            return 0
     
     # Step 4: Evaluate papers with LLM
     print("\nEvaluating papers for relevance...")
@@ -102,7 +119,7 @@ def main(config_path: str = "config.yaml"):
     )
     
     try:
-        relevant_papers = evaluator.evaluate_papers(
+        relevant_papers, unscored_papers = evaluator.evaluate_papers(
             papers=papers,
             research_context=research_context,
             user_interests=user_interests
@@ -113,11 +130,16 @@ def main(config_path: str = "config.yaml"):
         print("Aborting without sending a digest.")
         print("=" * 70)
         return 1
-    
+
     print(
         f"  Found {len(relevant_papers)} relevant papers "
         f"(score >= {evaluator.threshold})"
     )
+    if unscored_papers:
+        print(
+            f"  {len(unscored_papers)} paper(s) could not be scored "
+            "(surfaced in digest for manual review)"
+        )
     
     # Step 5: Send email digest (even if no papers found)
     print("\nSending email digest...")
@@ -131,7 +153,11 @@ def main(config_path: str = "config.yaml"):
         to_email=email_config['to_email']
     )
     
-    success = sender.send_digest(relevant_papers)
+    success = sender.send_digest(
+        relevant_papers,
+        unscored_papers=unscored_papers,
+        failed_categories=failed_categories
+    )
     
     if success:
         print("\n" + "=" * 70)
