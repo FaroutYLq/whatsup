@@ -1,6 +1,6 @@
 # Automated Scheduling with Cron
 
-This guide explains how to schedule the ArXiv Daily Digest 
+This guide explains how to schedule the ArXiv Weekly Digest 
 to run automatically every day.
 
 ## Overview
@@ -103,7 +103,7 @@ If prompted, choose your preferred editor (nano is easiest).
 Add this line (adjust the path):
 
 ```cron
-# ArXiv Daily Digest - Run every day at 8:00 AM
+# ArXiv Weekly Digest - Run every day at 8:00 AM
 0 8 * * * /Users/yourusername/Documents/whatsup/run_digest.sh
 ```
 
@@ -135,7 +135,7 @@ You should see your new job listed.
 0 9 * * 1-5 /path/to/whatsup/run_digest.sh
 ```
 
-### Twice daily: 8 AM and 6 PM
+### Twice weekly: 8 AM and 6 PM
 ```cron
 0 8,18 * * * /path/to/whatsup/run_digest.sh
 ```

@@ -1,7 +1,7 @@
 # Gmail SMTP Setup Guide
 
 This guide shows you how to set up Gmail to send your 
-daily ArXiv digest emails.
+weekly ArXiv digest emails.
 
 ## Overview
 
@@ -129,7 +129,7 @@ If configured correctly, you should receive an email.
 
 Gmail has sending limits:
 - Free accounts: ~500 emails/day
-- This shouldn't be an issue for daily digests, but if 
+- This shouldn't be an issue for weekly digests, but if 
   testing repeatedly, wait a few minutes
 
 ### Can't find "App passwords" option

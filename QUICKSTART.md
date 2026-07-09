@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get your ArXiv Daily Digest running in 5 minutes!
+Get your ArXiv Weekly Digest running in 5 minutes!
 
 ## Prerequisites
 
@@ -82,7 +82,7 @@ You should receive an email with relevant papers!
 
 ### 5. Automate (Optional)
 
-Run daily at 8 AM:
+Run weekly at 8 AM:
 
 ```bash
 crontab -e

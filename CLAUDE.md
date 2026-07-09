@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ArXiv Daily Digest — a Python tool that fetches recent arXiv papers, scores them for relevance using an Anthropic (Claude) LLM, and emails a daily digest. Optionally uses a Zotero library export as context for personalized scoring.
+ArXiv Weekly Digest — a Python tool that fetches recent arXiv papers, scores them for relevance using an Anthropic (Claude) LLM, and emails a weekly digest. Optionally uses a Zotero library export as context for personalized scoring.
 
 ## Commands
 

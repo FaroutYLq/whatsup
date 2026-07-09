@@ -1,4 +1,4 @@
-# ArXiv Daily Digest
+# ArXiv Weekly Digest
 
 Get one email per day with arXiv papers that match your interests.
 
@@ -17,7 +17,7 @@ Use this if you want to:
 - LLM-based relevance scoring (0-10)
 - Optional Zotero context for personalization
 - Email digest delivery
-- Daily automation via cron/launchd
+- Weekly automation via cron/launchd
 
 ## Quick Setup
 
@@ -44,7 +44,7 @@ cp config.yaml.example config.yaml
 python src/main.py
 ```
 
-5. (Optional) Schedule daily runs:
+5. (Optional) Schedule weekly runs:
 - See [docs/CRON_SETUP.md](docs/CRON_SETUP.md)
 
 ## Adapt It For Yourself

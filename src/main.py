@@ -1,5 +1,5 @@
 """
-Main orchestrator for the ArXiv Daily Digest system
+Main orchestrator for the ArXiv Weekly Digest system
 """
 
 import sys
@@ -14,13 +14,13 @@ from email_sender import EmailSender
 
 def main(config_path: str = "config.yaml"):
     """
-    Run the daily arxiv digest workflow.
+    Run the weekly arxiv digest workflow.
     
     Args:
         config_path: Path to configuration file
     """
     print("=" * 70)
-    print("ArXiv Daily Digest - Starting...")
+    print("ArXiv Weekly Digest - Starting...")
     print("=" * 70)
     print()
     

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# ArXiv Daily Digest Runner Script
+# ArXiv Weekly Digest Runner Script
 # 
 # This script runs the digest and logs output.
 # Useful for cron jobs and manual runs.

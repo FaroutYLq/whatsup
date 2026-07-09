@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# ArXiv Daily Digest Setup Script
+# ArXiv Weekly Digest Setup Script
 #
 # This script helps you set up the digest for first use.
 #
 
 echo "=========================================="
-echo "ArXiv Daily Digest - Setup"
+echo "ArXiv Weekly Digest - Setup"
 echo "=========================================="
 echo ""
 
@@ -76,14 +76,14 @@ echo ""
 echo "2. Read the documentation:"
 echo "   - docs/GMAIL_SETUP.md - Set up email"
 echo "   - docs/ZOTERO_EXPORT.md - Export your library"
-echo "   - docs/CRON_SETUP.md - Automate daily runs"
+echo "   - docs/CRON_SETUP.md - Automate weekly runs"
 echo ""
 echo "3. Test the digest:"
 echo "   python src/main.py"
 echo "   # or"
 echo "   ./run_digest.sh"
 echo ""
-echo "4. Set up daily automation (optional):"
+echo "4. Set up weekly automation (optional):"
 echo "   crontab -e"
 echo "   # Add: 0 8 * * * /path/to/whatsup/run_digest.sh"
 echo ""

@@ -1,7 +1,7 @@
 # Zotero Library Export Guide
 
 This guide explains how to export your Zotero library so the 
-ArXiv Daily Digest can understand your research interests.
+ArXiv Weekly Digest can understand your research interests.
 
 ## Why Export Your Zotero Library?
 

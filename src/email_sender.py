@@ -1,5 +1,5 @@
 """
-Email sender for delivering daily arxiv digest via SMTP
+Email sender for delivering weekly arxiv digest via SMTP
 """
 
 import re
@@ -61,7 +61,7 @@ class EmailSender:
         failed_categories: List[str] = None
     ) -> bool:
         """
-        Send the daily digest email.
+        Send the weekly digest email.
 
         Args:
             papers: List of relevant papers to include
@@ -169,7 +169,7 @@ class EmailSender:
         )
 
         if not papers:
-            body = ["ArXiv Daily Digest", ""]
+            body = ["ArXiv Weekly Digest", ""]
             body.extend(banner)
             body.extend([
                 "=" * 70,
@@ -192,7 +192,7 @@ class EmailSender:
                 "",
                 "---",
                 "This digest was generated automatically.",
-                "Powered by ArXiv Daily Digest"
+                "Powered by ArXiv Weekly Digest"
             ])
             return "\n".join(body)
 
@@ -204,7 +204,7 @@ class EmailSender:
             1 for p in papers if p.get('relevance_score', 0) >= 8
         )
         
-        lines = ["ARXIV DAILY DIGEST", "=" * 70, ""]
+        lines = ["ARXIV WEEKLY DIGEST", "=" * 70, ""]
         lines.extend(banner)
         lines.extend([
             f"📊 Summary: {len(papers)} relevant paper(s) found",
@@ -273,7 +273,7 @@ class EmailSender:
             "",
             "=" * 70,
             "📬 This digest was generated automatically",
-            "🤖 Powered by ArXiv Daily Digest with AI evaluation",
+            "🤖 Powered by ArXiv Weekly Digest with AI evaluation",
             "=" * 70
         ])
 
