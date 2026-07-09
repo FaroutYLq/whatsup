@@ -11,9 +11,20 @@ jobs:
   run-digest:
     runs-on: ubuntu-latest
 
+    # Needed by the keepalive step to push an activity commit.
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # GitHub disables scheduled workflows after 60 days without repo
+      # activity, which would silently stop the digest. This pushes a
+      # lightweight activity marker as the 60-day mark approaches.
+      - name: Keep scheduled workflow alive
+        if: github.event_name == 'schedule'
+        uses: gautamkrishnar/keepalive-workflow@v2
 
       - name: Check 3-day cadence
         id: cadence

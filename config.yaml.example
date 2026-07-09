@@ -29,17 +29,30 @@ arxiv:
     - physics.ins-det
     - astro-ph.IM
   
-  # Keywords for pre-filtering (optional, improves speed)
-  # Papers matching ANY keyword will be evaluated by LLM
+  # Keywords for pre-filtering (optional COST-SAVER, not a safety net)
+  # Only used when keyword_filter is true (see below). When active,
+  # only papers whose title/abstract contain one of these words (whole
+  # word match) are sent to the LLM.
   keywords:
     - superconductor
     - quasiparticle
     - THz
     - detector
     - photon
-  
-  # How many days back to search for papers
-  max_days_back: 1
+
+  # Whether to hard-filter by keywords before LLM scoring.
+  # false (recommended): every fetched paper is scored by the LLM, so
+  #   nothing is dropped by a substring miss. Costs more tokens.
+  # true: only keyword-matching papers are scored (cheaper, but risks
+  #   missing relevant papers that don't contain a listed keyword).
+  keyword_filter: false
+
+  # How many days back to search for papers.
+  # IMPORTANT: set this LARGER than your run cadence so consecutive
+  # runs overlap and no window is lost to a delayed/skipped run. The
+  # CI runs every 3 days, so 4-5 gives a safe overlap. Papers already
+  # seen simply get re-scored; they are not double-counted within a run.
+  max_days_back: 4
 
 # Anthropic (Claude) API Configuration
 anthropic:
