@@ -43,11 +43,25 @@ jobs:
           fi
 
       # GitHub disables scheduled workflows after 60 days without repo
-      # activity, which would silently stop the digest. This pushes a
-      # lightweight activity marker as the 60-day mark approaches.
+      # activity, which would silently stop the digest. Push an empty
+      # commit only when the repo is close to that mark. Done inline (no
+      # third-party action) so a blocked/unavailable action can never
+      # fail the job at setup.
       - name: Keep scheduled workflow alive
         if: github.event_name == 'schedule' && steps.guard.outputs.should_run == 'true'
-        uses: gautamkrishnar/keepalive-workflow@v2
+        run: |
+          last=$(git log -1 --format=%ct)
+          days=$(( ( $(date +%s) - last ) / 86400 ))
+          echo "Last repo activity: ${days} days ago."
+          if [ "$days" -ge 50 ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "chore: keepalive (prevent scheduled-workflow disable)"
+            git push
+            echo "Pushed keepalive commit."
+          else
+            echo "Under 50 days; no keepalive needed."
+          fi
 
       - name: Set up Python
         if: github.event_name == 'workflow_dispatch' || steps.guard.outputs.should_run == 'true'
