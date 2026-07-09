@@ -3,26 +3,42 @@ Parser for Zotero library exports (BibTeX or JSON)
 """
 
 import json
+import random
 import bibtexparser
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 class ZoteroParser:
     """Parse Zotero library to extract research interests."""
-    
-    def __init__(self, library_file: str):
+
+    def __init__(
+        self,
+        library_file: str,
+        shuffle: bool = True,
+        seed: Optional[int] = None
+    ):
         """
         Initialize the Zotero parser.
-        
+
         Args:
             library_file: Path to BibTeX or JSON export file
+            shuffle: If True (default), randomize the paper order so the
+                "detailed" slice sent to the LLM is a mixture across all
+                topics/collections rather than whatever order the file
+                happens to be in (Zotero groups by collection). Re-mixes
+                each run, so coverage rotates over time.
+            seed: Optional RNG seed for a reproducible shuffle; omit for
+                a fresh random order every run.
         """
         self.library_file = Path(library_file)
         self.papers = []
-        
+
         if self.library_file.exists():
             self._parse_library()
+
+        if shuffle and self.papers:
+            random.Random(seed).shuffle(self.papers)
     
     def _parse_library(self) -> None:
         """Parse the library file based on extension."""
@@ -121,11 +137,12 @@ class ZoteroParser:
             ""
         ]
         
-        # Section 1: Recent papers with abstracts
+        # Section 1: A sample of papers with abstracts (mixed across
+        # topics when shuffling is enabled).
         if detailed_papers > 0:
             summary_lines.extend([
-                f"Recent papers with details "
-                f"(most recent {detailed_papers}):",
+                f"Papers with details "
+                f"(a sample of {detailed_papers} across topics):",
                 ""
             ])
             

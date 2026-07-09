@@ -92,9 +92,14 @@ zotero:
   # Include all paper titles from library (recommended)
   include_all_titles: true
   
-  # Number of recent papers to include with full abstracts
+  # Number of papers to include with full abstracts
   # (remaining papers show titles only for context)
   detailed_papers: 200
+
+  # Randomize paper order so the detailed sample mixes all topics
+  # instead of just the first ones in the file. Re-mixes each run.
+  # Set shuffle_seed: <int> for a reproducible order.
+  shuffle: true
 
 # Your Research Interests
 interests:

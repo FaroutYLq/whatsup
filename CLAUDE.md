@@ -46,7 +46,7 @@ The pipeline is orchestrated by `src/main.py` and runs sequentially:
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/digest-every-3-days.yml`, now runs weekly — filename kept for stable workflow identity):
-- Runs once a week (Mondays at 14:00 UTC via `cron: "0 14 * * 1"`).
+- Runs weekly, targeting Thursday 17:00 America/Chicago. Because GitHub cron is UTC-only and ignores DST, it fires at both 22:00 and 23:00 UTC Thursday (`cron: "0 22 * * 4"` / `"0 23 * * 4"`) and a guard step keeps only the fire where Chicago local time is 17:00 — exactly one run per Thursday year-round.
 - A keepalive step (`gautamkrishnar/keepalive-workflow`) runs on schedule events to prevent GitHub from disabling the cron after 60 days of repo inactivity. Requires `contents: write` permission.
 - Set `arxiv.max_days_back` to 7 so each weekly run covers the full week since the previous one.
 - Config is injected from the `WHATSUP_CONFIG_YAML` secret.

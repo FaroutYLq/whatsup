@@ -38,7 +38,11 @@ def main(config_path: str = "config.yaml"):
     library_file = zotero_config.get('library_file', '')
     
     if library_file and Path(library_file).exists():
-        zotero = ZoteroParser(library_file)
+        zotero = ZoteroParser(
+            library_file,
+            shuffle=zotero_config.get('shuffle', True),
+            seed=zotero_config.get('shuffle_seed')
+        )
         include_all = zotero_config.get(
             'include_all_titles', True
         )

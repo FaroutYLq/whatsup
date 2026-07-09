@@ -2,10 +2,15 @@ name: ArXiv Digest Weekly
 
 on:
   schedule:
-    # Runs once a week, Mondays at 14:00 UTC. GitHub cron is UTC.
-    # Pair with arxiv.max_days_back: 7 in the config so each run covers
-    # the full week since the previous one.
-    - cron: "0 14 * * 1"
+    # Target: every Thursday 17:00 America/Chicago. GitHub cron is UTC
+    # only and ignores DST, so we fire at BOTH possible UTC times and a
+    # guard step below keeps only the fire where Chicago local time is
+    # actually 17:00 — exactly one run per Thursday year-round.
+    #   22:00 UTC = 17:00 CDT (summer, UTC-5)
+    #   23:00 UTC = 17:00 CST (winter, UTC-6)
+    # Pair with arxiv.max_days_back: 7 so each run covers the full week.
+    - cron: "0 22 * * 4"
+    - cron: "0 23 * * 4"
   workflow_dispatch:
 
 jobs:
@@ -20,22 +25,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Keep only the scheduled fire that lands on 17:00 Chicago; the
+      # other UTC fire (22:00 vs 23:00) is 16:00/18:00 local and skips.
+      - name: Guard to Thursday 17:00 America/Chicago
+        id: guard
+        if: github.event_name == 'schedule'
+        run: |
+          dow=$(TZ="America/Chicago" date +%u)   # 1=Mon .. 7=Sun; Thu=4
+          hour=$(TZ="America/Chicago" date +%H)
+          echo "Chicago local time: dow=$dow hour=$hour"
+          if [ "$dow" = "4" ] && [ "$hour" = "17" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Matched Thursday 17:00 Chicago."
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Not Thursday 17:00 Chicago; skipping this fire."
+          fi
+
       # GitHub disables scheduled workflows after 60 days without repo
       # activity, which would silently stop the digest. This pushes a
       # lightweight activity marker as the 60-day mark approaches.
       - name: Keep scheduled workflow alive
-        if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule' && steps.guard.outputs.should_run == 'true'
         uses: gautamkrishnar/keepalive-workflow@v2
 
       - name: Set up Python
+        if: github.event_name == 'workflow_dispatch' || steps.guard.outputs.should_run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
+        if: github.event_name == 'workflow_dispatch' || steps.guard.outputs.should_run == 'true'
         run: pip install -r requirements.txt
 
       - name: Write runtime config
+        if: github.event_name == 'workflow_dispatch' || steps.guard.outputs.should_run == 'true'
         env:
           WHATSUP_CONFIG_YAML: ${{ secrets.WHATSUP_CONFIG_YAML }}
         run: |
@@ -46,6 +71,7 @@ jobs:
           printf '%s\n' "$WHATSUP_CONFIG_YAML" > config.yaml
 
       - name: Write optional Zotero library
+        if: github.event_name == 'workflow_dispatch' || steps.guard.outputs.should_run == 'true'
         env:
           WHATSUP_ZOTERO_BIB: ${{ secrets.WHATSUP_ZOTERO_BIB }}
           WHATSUP_ZOTERO_BIB_GZ_B64_01: ${{ secrets.WHATSUP_ZOTERO_BIB_GZ_B64_01 }}
@@ -80,4 +106,5 @@ jobs:
           fi
 
       - name: Run digest
+        if: github.event_name == 'workflow_dispatch' || steps.guard.outputs.should_run == 'true'
         run: python src/main.py config.yaml
